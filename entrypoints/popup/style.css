@@ -1,0 +1,65 @@
+:root {
+  color: #0f1c18;
+  font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(ellipse at 10% 0%, rgba(45, 140, 118, 0.2), transparent 50%),
+    linear-gradient(165deg, #f3faf7, #dfeae4);
+}
+
+.popup {
+  padding: 18px 16px 16px;
+}
+
+.brand {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #2d6b5c;
+  font-weight: 650;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.lede {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #3a524a;
+}
+
+.status {
+  margin: 0 0 12px;
+  font-size: 12px;
+}
+
+button {
+  border: 0;
+  border-radius: 9px;
+  padding: 9px 12px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  background: #d7e5df;
+  color: #0f241e;
+}
+
+button.primary {
+  background: #0d5c4d;
+  color: #f2fbf7;
+}
+
+.hint {
+  margin: 12px 0 0;
+  font-size: 11px;
+  color: #5a6f67;
+  line-height: 1.4;
+}

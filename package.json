@@ -1,0 +1,26 @@
+{
+  "name": "enterprise-trojan-horse",
+  "version": "1.0.0",
+  "description": "Enterprise Chrome Extension — integration companion that embeds SaaS capabilities into Salesforce, LinkedIn, and legacy ERPs.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@wxt-dev/module-react": "^1.2.2",
+    "typescript": "^5.8.0",
+    "wxt": "^0.20.27"
+  }
+}
