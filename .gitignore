@@ -6,5 +6,6 @@ dist
 .env
 .env.*
 !.env.example
+public/crm-config.local.js
 .DS_Store
 *.log

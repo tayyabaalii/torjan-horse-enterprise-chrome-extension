@@ -126,50 +126,54 @@ Open [http://localhost:4173/demo-host.html](http://localhost:4173/demo-host.html
 
 ---
 
-## Connect a real SaaS backend
+## Connect a real SaaS backend / Supabase CRM
 
-By default the extension uses a **mock automation loop** (great for demos).
+### Option A — Supabase CRM (built-in)
 
-1. Copy env example:
+1. Copy env example and fill your project keys:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Set your API:
-
 ```env
+VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key
+```
+
+2. Create the `leads` table (SQL migration already applied if you used the linked Supabase project; otherwise run the schema from the repo history / ask the agent to re-apply).
+
+3. In Supabase → **Authentication → Providers → Email**, turn off **Confirm email** for faster testing.
+
+4. Rebuild and reload the extension:
+
+```bash
+npm run build
+```
+
+5. **Sign up** from the extension popup (or side panel) with email + password.
+
+6. On LinkedIn, click **EC → Sync to SaaS** — the person is saved to `leads`.
+
+7. Open the CRM UI:
+
+```bash
+npx serve public -p 4173
+```
+
+Visit [http://localhost:4173/crm.html](http://localhost:4173/crm.html)
+
+### Option B — Custom API
+
+Copy `.env.example` → `.env` and set:
+
+```
 VITE_SAAS_API_URL=https://api.your-saas.example.com
 ```
 
-3. Implement:
+Expected endpoint: `POST /api/extension/automate` with `Authorization: Bearer <token>` and body `{ action, context, notes? }`.
 
-```http
-POST /api/extension/automate
-Authorization: Bearer <token>
-Content-Type: application/json
-```
-
-Body shape:
-
-```json
-{
-  "action": "enrich | sync_crm | draft_outreach | log_activity",
-  "context": {
-    "platform": "linkedin",
-    "url": "https://www.linkedin.com/in/…",
-    "fields": {
-      "name": "…",
-      "title": "…",
-      "company": "…",
-      "email": "…",
-      "recordId": "…"
-    }
-  }
-}
-```
-
-4. Replace demo login in `lib/auth.ts` with real OAuth (`chrome.identity.launchWebAuthFlow` or your SaaS login popup) and set `oauth2.client_id` in `wxt.config.ts`.
+Replace login in `lib/auth.ts` with your OAuth flow if needed.
 
 ---
 

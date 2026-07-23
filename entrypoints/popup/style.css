@@ -57,9 +57,46 @@ button.primary {
   color: #f2fbf7;
 }
 
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #3a524a;
+}
+
+.auth-form input {
+  border: 1px solid #b7c7bf;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  background: #fff;
+}
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+.error {
+  margin: 0;
+  color: #8b2e2e;
+  font-size: 12px;
+}
+
 .hint {
   margin: 12px 0 0;
   font-size: 11px;
   color: #5a6f67;
   line-height: 1.4;
+}
+
+.hint code {
+  font-size: 10px;
 }

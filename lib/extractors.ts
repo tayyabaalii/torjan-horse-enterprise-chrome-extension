@@ -52,7 +52,8 @@ function extractLinkedIn(): PageContext["fields"] {
   const name =
     textOf("h1.text-heading-xlarge") ||
     textOf(".pv-text-details__left-panel h1") ||
-    textOf('[data-anonymize="person-name"]');
+    textOf('[data-anonymize="person-name"]') ||
+    document.title.split("|")[0]?.split("-")[0]?.trim();
 
   const title =
     textOf(".text-body-medium.break-words") ||
@@ -64,7 +65,7 @@ function extractLinkedIn(): PageContext["fields"] {
     textOf(".pv-text-details__right-panel .inline-show-more-text");
 
   return {
-    name,
+    name: name || undefined,
     title,
     company,
     profileUrl: location.href.split("?")[0],

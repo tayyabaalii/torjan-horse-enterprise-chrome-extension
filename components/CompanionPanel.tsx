@@ -25,6 +25,8 @@ export function CompanionPanel({ context, onRefreshContext }: Props) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<AutomationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     sendToBackground({ type: "GET_AUTH" }).then((res) => {
@@ -34,9 +36,34 @@ export function CompanionPanel({ context, onRefreshContext }: Props) {
 
   async function login() {
     setError(null);
-    const res = await sendToBackground({ type: "LOGIN" });
-    if (res.type === "AUTH_STATE") setSession(res.session);
-    else if (res.type === "ERROR") setError(res.message);
+    setBusy(true);
+    try {
+      const res = await sendToBackground({
+        type: "LOGIN",
+        email,
+        password,
+      });
+      if (res.type === "AUTH_STATE") setSession(res.session);
+      else if (res.type === "ERROR") setError(res.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function signup() {
+    setError(null);
+    setBusy(true);
+    try {
+      const res = await sendToBackground({
+        type: "SIGNUP",
+        email,
+        password,
+      });
+      if (res.type === "AUTH_STATE") setSession(res.session);
+      else if (res.type === "ERROR") setError(res.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function logout() {
@@ -134,9 +161,37 @@ export function CompanionPanel({ context, onRefreshContext }: Props) {
                 </button>
               </div>
             ) : (
-              <button type="button" className="primary" onClick={login}>
-                Connect SaaS account
-              </button>
+              <form
+                className="auth-inline"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void login();
+                }}
+              >
+                <input
+                  type="email"
+                  placeholder="CRM email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
+                <div className="auth-btns">
+                  <button type="submit" className="primary" disabled={busy}>
+                    Sign in
+                  </button>
+                  <button type="button" className="ghost" disabled={busy} onClick={() => void signup()}>
+                    Sign up
+                  </button>
+                </div>
+              </form>
             )}
           </section>
 
