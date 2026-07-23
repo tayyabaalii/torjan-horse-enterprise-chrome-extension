@@ -14,6 +14,7 @@ export default defineConfig({
       "https://*.lightning.force.com/*",
       "https://*.linkedin.com/*",
       "https://*.hubspot.com/*",
+      "https://*.supabase.co/*",
       // Demo / local host pages for development
       "http://localhost/*",
       "https://localhost/*",

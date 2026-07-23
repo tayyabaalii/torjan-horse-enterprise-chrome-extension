@@ -157,6 +157,40 @@ export const companionStyles = `
 
   .primary:hover { background: #0a4a3e; }
 
+  .ghost {
+    border: 1px solid rgba(20, 55, 46, 0.2);
+    border-radius: 10px;
+    padding: 11px 14px;
+    background: transparent;
+    color: #0d5c4d;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .auth-inline {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .auth-inline input {
+    border: 1px solid rgba(20, 55, 46, 0.18);
+    border-radius: 8px;
+    padding: 9px 10px;
+    font: inherit;
+    font-size: 13px;
+    background: #fff;
+  }
+
+  .auth-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .auth-btns .primary { width: auto; }
+
   .auth-row {
     display: flex;
     justify-content: space-between;

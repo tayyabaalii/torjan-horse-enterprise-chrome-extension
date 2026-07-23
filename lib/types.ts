@@ -53,7 +53,8 @@ export interface AutomationResult {
 /** Message envelope for chrome.runtime.sendMessage */
 export type ExtensionMessage =
   | { type: "GET_AUTH" }
-  | { type: "LOGIN"; email?: string }
+  | { type: "LOGIN"; email: string; password: string }
+  | { type: "SIGNUP"; email: string; password: string }
   | { type: "LOGOUT" }
   | { type: "RUN_AUTOMATION"; payload: AutomationRequest }
   | { type: "PING" };

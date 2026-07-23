@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enterprise Companion CRM</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Optional local override (gitignored): public/crm-config.local.js -->
+    <script src="./crm-config.local.js"></script>
+    <style>
+      :root {
+        font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+        color: #0f1c18;
+        --bg: #e8f0eb;
+        --panel: #f7fbf8;
+        --ink: #0c221c;
+        --accent: #0d5c4d;
+        --muted: #5a6f67;
+        --line: rgba(20, 55, 46, 0.14);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(ellipse at 0% 0%, rgba(45, 140, 118, 0.2), transparent 45%),
+          linear-gradient(165deg, #f3faf7, #d5e2da);
+      }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 48px; }
+      .brand {
+        margin: 0 0 6px;
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 650;
+      }
+      h1 { margin: 0 0 8px; font-size: 28px; }
+      .lede { margin: 0 0 24px; color: var(--muted); max-width: 52ch; }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px;
+        margin-bottom: 18px;
+      }
+      label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+      input {
+        width: 100%;
+        margin-top: 4px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+        font: inherit;
+      }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .btns { display: flex; gap: 8px; margin-top: 8px; }
+      button {
+        border: 0;
+        border-radius: 9px;
+        padding: 10px 14px;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        background: #d7e5df;
+        color: var(--ink);
+      }
+      button.primary { background: var(--accent); color: #f2fbf7; }
+      .error { color: #8b2e2e; font-size: 13px; }
+      .ok { color: var(--accent); font-size: 13px; }
+      table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+      .status {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #dceee7;
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 600;
+      }
+      a { color: var(--accent); }
+      .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+      .empty { color: var(--muted); padding: 20px 0; }
+      @media (max-width: 720px) {
+        .row { grid-template-columns: 1fr; }
+        .toolbar { flex-direction: column; align-items: flex-start; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p class="brand">Enterprise Companion</p>
+      <h1>CRM pipeline</h1>
+      <p class="lede">
+        Leads synced from LinkedIn via the Chrome extension land here in your
+        Supabase <code>leads</code> table.
+      </p>
+
+      <div id="auth-card" class="card">
+        <div class="row">
+          <label>
+            Email
+            <input id="email" type="email" autocomplete="username" />
+          </label>
+          <label>
+            Password
+            <input id="password" type="password" autocomplete="current-password" />
+          </label>
+        </div>
+        <div class="btns">
+          <button class="primary" id="signin" type="button">Sign in</button>
+          <button id="signup" type="button">Sign up</button>
+        </div>
+        <p id="auth-msg" class="error" hidden></p>
+        <p style="margin: 12px 0 0; font-size: 12px; color: var(--muted)">
+          Tip: In Supabase → Authentication → Providers → Email, turn off
+          <em>Confirm email</em> for faster local testing.
+        </p>
+      </div>
+
+      <div id="app" class="card" hidden>
+        <div class="toolbar">
+          <div>
+            Signed in as <strong id="who"></strong>
+          </div>
+          <div class="btns">
+            <button id="refresh" type="button">Refresh</button>
+            <button id="signout" type="button">Sign out</button>
+          </div>
+        </div>
+        <div id="leads-wrap">
+          <p class="empty">Loading…</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Fill these from your Supabase project settings (same values as extension .env)
+      const SUPABASE_URL = window.CRM_SUPABASE_URL || "https://YOUR_PROJECT.supabase.co";
+      const SUPABASE_ANON_KEY = window.CRM_SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      const authCard = document.getElementById("auth-card");
+      const app = document.getElementById("app");
+      const authMsg = document.getElementById("auth-msg");
+      const who = document.getElementById("who");
+      const leadsWrap = document.getElementById("leads-wrap");
+
+      function showError(msg) {
+        authMsg.hidden = !msg;
+        authMsg.textContent = msg || "";
+        authMsg.className = "error";
+      }
+
+      async function renderLeads() {
+        const { data, error } = await supabase
+          .from("leads")
+          .select("id, name, title, company, email, linkedin_url, status, source, created_at, notes")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          leadsWrap.innerHTML = `<p class="error">${error.message}</p>`;
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          leadsWrap.innerHTML = `<p class="empty">No leads yet. Open LinkedIn, click <strong>EC</strong>, sign in, then <strong>Sync to SaaS</strong>.</p>`;
+          return;
+        }
+
+        leadsWrap.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Company</th>
+                <th>Status</th>
+                <th>Source</th>
+                <th>LinkedIn</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map((l) => `
+                <tr>
+                  <td>
+                    <strong>${escapeHtml(l.name || "—")}</strong><br/>
+                    <span style="color:var(--muted);font-size:12px">${escapeHtml(l.title || "")}</span>
+                  </td>
+                  <td>${escapeHtml(l.company || "—")}</td>
+                  <td><span class="status">${escapeHtml(l.status)}</span></td>
+                  <td>${escapeHtml(l.source || "")}</td>
+                  <td>${l.linkedin_url ? `<a href="${escapeAttr(l.linkedin_url)}" target="_blank" rel="noreferrer">Profile</a>` : "—"}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        `;
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+      function escapeAttr(s) {
+        return escapeHtml(s).replaceAll("'", "&#39;");
+      }
+
+      async function showApp(user) {
+        authCard.hidden = true;
+        app.hidden = false;
+        who.textContent = user.email;
+        await renderLeads();
+      }
+
+      async function showAuth() {
+        authCard.hidden = false;
+        app.hidden = true;
+      }
+
+      document.getElementById("signin").onclick = async () => {
+        showError("");
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) return showError(error.message);
+        await showApp(data.user);
+      };
+
+      document.getElementById("signup").onclick = async () => {
+        showError("");
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) return showError(error.message);
+        if (!data.session) {
+          showError("Account created. Confirm email (or disable confirm in Supabase), then sign in.");
+          return;
+        }
+        await showApp(data.user);
+      };
+
+      document.getElementById("signout").onclick = async () => {
+        await supabase.auth.signOut();
+        await showAuth();
+      };
+
+      document.getElementById("refresh").onclick = () => renderLeads();
+
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session?.user) showApp(data.session.user);
+      });
+    </script>
+  </body>
+</html>

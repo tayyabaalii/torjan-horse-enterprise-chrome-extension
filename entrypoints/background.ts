@@ -1,4 +1,9 @@
-import { clearSession, getSession, loginDemo } from "../lib/auth";
+import {
+  clearSession,
+  getSession,
+  loginWithPassword,
+  signUpWithPassword,
+} from "../lib/auth";
 import { runAutomation } from "../lib/saas-api";
 import type {
   ExtensionMessage,
@@ -6,8 +11,7 @@ import type {
 } from "../lib/types";
 
 /**
- * Background service worker — auth, long-lived state, SaaS API calls.
- * Content scripts never talk to the backend directly; they message here.
+ * Background service worker — auth, long-lived state, SaaS / Supabase CRM calls.
  */
 export default defineBackground(() => {
   console.log("[Enterprise Companion] service worker ready");
@@ -32,8 +36,19 @@ export default defineBackground(() => {
             }
 
             case "LOGIN": {
-              // Demo auth. Production: chrome.identity.launchWebAuthFlow → your SaaS.
-              const session = await loginDemo(message.email);
+              const session = await loginWithPassword(
+                message.email,
+                message.password,
+              );
+              sendResponse({ type: "AUTH_STATE", session });
+              break;
+            }
+
+            case "SIGNUP": {
+              const session = await signUpWithPassword(
+                message.email,
+                message.password,
+              );
               sendResponse({ type: "AUTH_STATE", session });
               break;
             }
@@ -49,7 +64,7 @@ export default defineBackground(() => {
               if (!session) {
                 sendResponse({
                   type: "ERROR",
-                  message: "Not signed in. Connect your SaaS account first.",
+                  message: "Not signed in. Connect your CRM account first.",
                 });
                 break;
               }
@@ -72,7 +87,6 @@ export default defineBackground(() => {
         }
       })();
 
-      // Keep the message channel open for async sendResponse
       return true;
     },
   );
